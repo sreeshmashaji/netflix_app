@@ -20,16 +20,17 @@ async def add_movie(
     title: str = Form(...),
     overview: str = Form(...),
     media_type: str = Form(...),
-    adult: bool = Form(...),
+    adult: Optional[bool] = Form(None),
     original_language: str = Form(...),
     popularity: float = Form(...),
     release_date: Optional[str] = Form(None),
     first_air_date: Optional[str] = Form(None),
     vote_average: float = Form(...),
-    vote_count: int = Form(...),
+    
     origin_country: Optional[List[str]] = Form(None),
     genre_ids: List[str] = Form(...),  # Include genre IDs
-    movie_image: UploadFile = File(None)  # Handling the movie image upload
+    movie_image: UploadFile = File(None) , # Handling the movie image upload
+    banner_image:UploadFile=File(None)
 ):
     try:
         # Handle movie image
@@ -54,21 +55,44 @@ async def add_movie(
                     detail=f"Failed to save image: {str(e)}"
                 )
 
+
+        banner=None
+        if banner_image:
+            allowed_extensions = ['png', 'jpg', 'jpeg']
+            file_ext = banner_image.filename.split('.')[-1]
+            if file_ext.lower() not in allowed_extensions:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Only PNG, JPG, and JPEG formats are allowed for the image"
+                )
+
+            file_location = os.path.join(IMAGE_DIR, banner_image.filename)
+            try:
+                with open(file_location, "wb") as buffer:
+                    shutil.copyfileobj(banner_image.file, buffer)
+                banner = f"http://localhost:8000/images/{banner_image.filename}"
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to save image: {str(e)}"
+                )
+
         # Prepare data for insertion
         data = {
             'title': title,
             'overview': overview,
             'media_type': media_type,
-            'adult': adult,
+            'adult': True,
             'original_language': original_language,
             'popularity': popularity,
             'release_date': release_date,
             'first_air_date': first_air_date,
             'vote_average': vote_average,
-            'vote_count': vote_count,
+            
             'origin_country': origin_country,
             'genre_ids': genre_ids,  # Include genre IDs
             'image': image_url,
+            'banner_image':banner,
             'date_added': datetime.now()
         }
 
@@ -91,6 +115,9 @@ async def add_movie(
             detail=str(e)
         )
 
+
+
+
 @router.put('/update/{movie_id}', summary="Update a movie")
 async def update_movie(
     movie_id: str,
@@ -103,7 +130,7 @@ async def update_movie(
     release_date: Optional[str] = Form(None),
     first_air_date: Optional[str] = Form(None),
     vote_average: Optional[float] = Form(None),
-    vote_count: Optional[int] = Form(None),
+    
     origin_country: Optional[List[str]] = Form(None),
     genre_ids: Optional[List[str]] = Form(None),  # Include genre IDs
     movie_image: Optional[UploadFile] = File(None)  # Handling the movie image upload
@@ -136,8 +163,7 @@ async def update_movie(
             update_data['first_air_date'] = first_air_date
         if vote_average:
             update_data['vote_average'] = vote_average
-        if vote_count:
-            update_data['vote_count'] = vote_count
+        
         if origin_country:
             update_data['origin_country'] = origin_country
         if genre_ids is not None:
@@ -222,6 +248,36 @@ async def get_all_movies():
         for movie in movies:
             movie["_id"] = str(movie["_id"])
         return {"message": "success", "data": movies}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+    
+
+
+
+
+@router.get('/movies_by_genre/{genre_id}', summary="Get restaurants based on a single genre ID")
+async def get_restaurants_by_genre(genre_id: str):
+    try:
+        # Find movies that match the genre_id
+        matched_movies = collection.find({'genre_ids': genre_id})
+        
+        
+        restaurant_list = []
+        for restaurant in matched_movies:
+            restaurant["_id"] = str(restaurant["_id"])
+            restaurant_list.append(restaurant)
+
+        if not restaurant_list:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No restaurants found for the provided genre"
+            )
+
+        return {"message": "success", "data": restaurant_list}
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

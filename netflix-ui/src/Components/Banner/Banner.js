@@ -1,34 +1,44 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import './Banner.css'
 import '../../App.css'
-import { API_KEY  } from '../../Constants/Constant'
-import axios_instance from '../../axios_instance'
-// import axios from './axios';
+
+import axios from 'axios'
 
 function Banner() {
-    useEffect(()=>{
-        axios_instance.get(`trending/all/week?api_key=${API_KEY}&language=en-US1`).then((res)=>{
-            console.log(res.data)
-        })
 
-    },[])
+    const [movie, setMovie] = useState('')
+
+    useEffect(() => {
+        axios.get("http://localhost:8000/movies/movies_by_genre/66dfe9f0ba6e7fad97b37cba")
+            .then((res) => {
+                console.log(res.data)
+                const movies = res.data.data; // assuming 'data' is an array of movies
+                if (movies.length > 0) {
+                    // Generate a random index based on the length of the movies array
+                    const randomIndex = Math.floor(Math.random() * movies.length);
+                    setMovie(movies[randomIndex]); // Set the movie based on the random index
+                }
+            })
+            .catch((err) => {
+                console.error("Error fetching movie:", err);
+            });
+    }, [])
+
     return (
-        <div className='banner'>
+        <div 
+            className='banner' 
+            style={{ backgroundImage: `url(${movie ? movie.banner_image : " "})` }} // Correct inline style for background image
+        >
             <div className='content'>
-                <h1 className='title'>Movie Name</h1>
+                <h1 className='title'>{movie ? movie.title : ""}</h1>
                 <div className='banner_buttons'>
-                    <button className='button'>play </button>
-                    <button className='button'>My List </button>
-
+                    <button className='button'>Play</button>
+                    <button className='button'>My List</button>
                 </div>
 
-                <h1 className='description'>Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop</h1>
-
-
-
+                <h1 className='description'>{movie ? movie.overview : " "}</h1>
             </div>
             <div className='fade'></div>
-
         </div>
     )
 }

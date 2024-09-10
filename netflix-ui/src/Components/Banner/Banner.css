@@ -1,11 +1,11 @@
-.banner{
-    background-image: url('https://wallpaperaccess.com/full/2703652.png');
-    background-size: cover;
-    height: 475px;
+ /* .banner{
+    
     color: white;
+    object-fit: contain;
+    height: 478px;  
     
 
-}
+} */
 
 
 .content{
@@ -49,6 +49,29 @@
     max-width: 360px;
 }
 .fade{
-    height: 10.6rem;
+    height: 15.6rem;
     background-image: linear-gradient(180deg,transparent,rgba(37,37,37),#111);
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.banner {
+    color: white;
+    background-size: cover; /* Ensure the image covers the banner */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+    height: 478px;  
+    /* Make sure you provide the correct path */
 }

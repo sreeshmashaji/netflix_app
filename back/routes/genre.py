@@ -124,3 +124,5 @@ async def get_all_genres():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
