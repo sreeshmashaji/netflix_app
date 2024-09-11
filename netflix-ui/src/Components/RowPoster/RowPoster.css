@@ -20,7 +20,16 @@
 
 
 .poster{
-    max-height: 250px;
-    max-width: 200px;
+    max-height: 380px;
+    width:850px;
     margin-right: 10px;
+}
+
+
+.smallPoster{
+    max-height: 250px;
+    width:290px;
+    margin-right: 10px;
+
+
 }

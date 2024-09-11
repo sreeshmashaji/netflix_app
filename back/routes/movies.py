@@ -21,13 +21,7 @@ async def add_movie(
     overview: str = Form(...),
     media_type: str = Form(...),
     adult: Optional[bool] = Form(None),
-    original_language: str = Form(...),
-    popularity: float = Form(...),
-    release_date: Optional[str] = Form(None),
-    first_air_date: Optional[str] = Form(None),
-    vote_average: float = Form(...),
     
-    origin_country: Optional[List[str]] = Form(None),
     genre_ids: List[str] = Form(...),  # Include genre IDs
     movie_image: UploadFile = File(None) , # Handling the movie image upload
     banner_image:UploadFile=File(None)
@@ -83,13 +77,7 @@ async def add_movie(
             'overview': overview,
             'media_type': media_type,
             'adult': True,
-            'original_language': original_language,
-            'popularity': popularity,
-            'release_date': release_date,
-            'first_air_date': first_air_date,
-            'vote_average': vote_average,
-            
-            'origin_country': origin_country,
+           
             'genre_ids': genre_ids,  # Include genre IDs
             'image': image_url,
             'banner_image':banner,
@@ -125,15 +113,10 @@ async def update_movie(
     overview: Optional[str] = Form(None),
     media_type: Optional[str] = Form(None),
     adult: Optional[bool] = Form(None),
-    original_language: Optional[str] = Form(None),
-    popularity: Optional[float] = Form(None),
-    release_date: Optional[str] = Form(None),
-    first_air_date: Optional[str] = Form(None),
-    vote_average: Optional[float] = Form(None),
-    
-    origin_country: Optional[List[str]] = Form(None),
+   
     genre_ids: Optional[List[str]] = Form(None),  # Include genre IDs
-    movie_image: Optional[UploadFile] = File(None)  # Handling the movie image upload
+    movie_image: Optional[UploadFile] = File(None) , # Handling the movie image upload
+    banner_image:Optional[UploadFile]=File(None)
 ):
     try:
         # Find the movie by ID
@@ -153,19 +136,30 @@ async def update_movie(
             update_data['media_type'] = media_type
         if adult is not None:
             update_data['adult'] = adult
-        if original_language:
-            update_data['original_language'] = original_language
-        if popularity:
-            update_data['popularity'] = popularity
-        if release_date:
-            update_data['release_date'] = release_date
-        if first_air_date:
-            update_data['first_air_date'] = first_air_date
-        if vote_average:
-            update_data['vote_average'] = vote_average
         
-        if origin_country:
-            update_data['origin_country'] = origin_country
+        if banner_image:
+            allowed_extensions = ['png', 'jpg', 'jpeg']
+            file_ext = banner_image.filename.split('.')[-1]
+            if file_ext.lower() not in allowed_extensions:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Only PNG, JPG, and JPEG formats are allowed for the image"
+                )
+
+            file_location = os.path.join(IMAGE_DIR, banner_image.filename)
+            try:
+                with open(file_location, "wb") as buffer:
+                    shutil.copyfileobj(banner_image.file, buffer)
+                update_data["banner_image"] = f"http://localhost:8000/images/{banner_image.filename}"
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to save image: {str(e)}"
+                )
+
+
+
+
         if genre_ids is not None:
             update_data['genre_ids'] = genre_ids  # Update genre IDs
         if movie_image:
